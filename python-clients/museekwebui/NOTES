@@ -1,0 +1,13 @@
+$ virtualenv pyenv
+$ source pyenv/bin/activate
+
+$ cd python-bindings
+$ python setup.py build
+$ python setup.py install
+
+$ cd Mucipher/PyMucipher
+$ python setup.py build
+$ python setup.py install
+
+
+$ python museekwebui.py
