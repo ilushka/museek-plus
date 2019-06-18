@@ -1,6 +1,6 @@
 from flask import Flask, g, render_template, jsonify, request
 from kvring import KeyValueRing
-from mudriver import worker, mudriver
+from mudriver import mudriver, muworker
 
 app = Flask(__name__)
 
@@ -62,6 +62,6 @@ def get_user():
   return jsonify(mudriver.get_user(request.args.get("user")))
 
 if __name__ == '__main__':
-  worker.start()
-  app.run(host="0.0.0.0", port=5000, debug=True)
+  muworker.start()
+  app.run(host="0.0.0.0", port=5000)
 

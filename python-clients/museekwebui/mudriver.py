@@ -12,6 +12,8 @@ WORKER_THREAD_DELAY = 0.1
 # config_dir = str(os.path.expanduser("~/.museekd/"))
 # config_file = config_dir + "museekcontrol.config"
 
+logging.basicConfig(level=logging.DEBUG)
+
 class MuseekDriver(driver.Driver):
   def __init__(self):
     driver.Driver.__init__(self)
@@ -20,7 +22,6 @@ class MuseekDriver(driver.Driver):
     self.__uploads = {}
     self.__downloads = {}
     self.__search_results = {}
-    # MONKEY: self.__users = {}
     self.__users = KeyValueRing(100)
 
   def connect(self):
@@ -173,7 +174,8 @@ class MuseekDriver(driver.Driver):
     self.is_connected = True
 
   def cb_search_results(self, ticket, user, free, speed, queue, results):
-    logging.debug("cb_search_results: ticket: %s, user: %s, free: %s, speed: %s, queue: %s, results: %s" % (ticket, user, free, speed, queue, results))
+    # MONKEY: logging.debug("cb_search_results: ticket: %s, user: %s, free: %s, speed: %s, queue: %s, results: %s" % (ticket, user, free, speed, queue, results))
+    logging.info("cb_search_results: ticket: %s, user: %s, free: %s, speed: %s, queue: %s, results: %s" % (ticket, user, free, speed, queue, results))
     if len(results) == 0:
       return
     us = self.get_sresults_for_user(ticket, user)
@@ -183,25 +185,26 @@ class MuseekDriver(driver.Driver):
     self.__set_user(user, free, speed, queue)
 
   def cb_user_info(self, user, info, picture, uploads, queue, free):
-    logging.debug("cb_user_info: user: %s, info: %s, image: %s, uploads: %d, queue: %d, free: %d" % (user, info, picture, uploads, queue, free))
+    # MONKEY: logging.debug("cb_user_info: user: %s, info: %s, image: %s, uploads: %d, queue: %d, free: %d" % (user, info, picture, uploads, queue, free))
+    logging.info("cb_user_info: user: %s, info: %s, image: %s, uploads: %d, queue: %d, free: %d" % (user, info, picture, uploads, queue, free))
     self.__set_user(user, free, 0, queue, info, picture, uploads)
 
-class Worker(threading.Thread):
-  def __init__(self, mudriver):
-    super(Worker, self).__init__()
-    self.mudriver = mudriver
+class MuseekWorker(threading.Thread):
+  def __init__(self, driver):
+    super(MuseekWorker, self).__init__()
+    self.driver = driver
     self.event_stop = threading.Event()
 
   def run(self):
-    self.mudriver.connect()
+    self.driver.connect()
     while not self.event_stop.isSet():
       time.sleep(WORKER_THREAD_DELAY)
-      self.mudriver.process()
+      self.driver.process()
 
   def join(self, timeout=None):
     self.event_stop.set()
-    super(Worker, self).join(timeout)
+    super(MuseekWorker, self).join(timeout)
 
 mudriver = MuseekDriver()
-worker = Worker(mudriver)
+muworker = MuseekWorker(mudriver)
 
