@@ -98,7 +98,10 @@
                       ', speed: ' + j['speed'];
                   $('#user_hover_box').text(t);
                   var h = $('#user_hover_box').height();
-                  $('#user_hover_box').css({left: e.pageX, top: (e.pageY - h)}).show();
+                  /* NOTE: Need to offset tooltip a bit otherwise when it shows up it can cover the element
+                  that triggered MouseOver event, which, in turn, will cause MouseOut event, and so on...
+                  Causing tooltip to flicker. */
+                  $('#user_hover_box').css({left: e.pageX + 3, top: (e.pageY - h - 3)}).show();
                 });
               }, function(e) {
                 $('#user_hover_box').hide();
@@ -252,6 +255,7 @@
 
     .hover_link {
       display: inline-block;
+      background-color: red;
     }
 </style>
 </head>

@@ -12,7 +12,7 @@ WORKER_THREAD_DELAY = 0.1
 # config_dir = str(os.path.expanduser("~/.museekd/"))
 # config_file = config_dir + "museekcontrol.config"
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 class MuseekDriver(driver.Driver):
   def __init__(self):
