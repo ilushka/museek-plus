@@ -1,6 +1,5 @@
 import ConfigParser, sys, os, select, threading, time, md5
 from flask import Flask, g, render_template, jsonify, request
-from flask_socketio import SocketIO
 try:
   from museek import messages, driver
 except:

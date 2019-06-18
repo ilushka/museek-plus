@@ -9,6 +9,9 @@ function show_usage() {
         "install-env")
             printf "Install virtualenv and install python-bindings into it.\n"
             ;;
+        "start")
+            printf "Start backend application.\n"
+            ;;
         *)
             printf "Usage: ${BIN_NAME} <"
             cat ${BIN_NAME} | awk 'BEGIN { FS = "\""; ORS = "|"; } /\"[a-z\-]+\"\) # first-level-arg/ { print $2; }'
@@ -20,6 +23,7 @@ function show_usage() {
 function install_env() {
     virtualenv pyenv
     . pyenv/bin/activate
+    pip install Flask
     pushd ../../python-bindings
     python setup.py build
     python setup.py install
@@ -30,9 +34,17 @@ function install_env() {
     popd
 }
 
+function start_app {
+    . pyenv/bin/activate
+    python museekwebui.py
+}
+
 case $1 in
     "install-env") # first-level-arg;
         install_env "${@:2}"
+        ;;
+    "start") # first-level-arg;
+        start_app "${@:2}"
         ;;
     "help") # first-level-arg;
         show_usage "${@:2}"
