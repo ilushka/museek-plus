@@ -1,5 +1,6 @@
 import ConfigParser, sys, os, select, threading, time, md5
 from kvring import KeyValueRing
+import logging
 try:
   from museek import messages, driver
 except:
@@ -23,17 +24,17 @@ class MuseekDriver(driver.Driver):
     self.__users = KeyValueRing(100)
 
   def connect(self):
-    print "connect"
+    logging.info("connect")
     try:
       driver.Driver.connect(self, "localhost:2240", "password", messages.EM_CHAT | messages.EM_USERINFO | messages.EM_PRIVATE | messages.EM_TRANSFERS | messages.EM_USERSHARES | messages.EM_CONFIG)
     except Exception, e:
-      print e
+      logging.error(e)
 
   def process(self):
     # select(ready_read_list, ready_write_list, exception_list, timeout_s)
     r, w, x = select.select([self.socket], [], [self.socket], 0)
     if self.socket in r:
-      print "process: " + str(r) + " " + str(w) + " " + str(x)
+      logging.debug("process: " + str(r) + " " + str(w) + " " + str(x))
       driver.Driver.process(self)
 
   def disconnect(self):
@@ -46,46 +47,46 @@ class MuseekDriver(driver.Driver):
     return self.__downloads
 
   def abort_download(self, md5hash):
-    print "abort_download: %s" % (md5hash)
+    logging.info("abort_download: %s" % (md5hash))
     d = self.__downloads[md5hash]
-    print "abort_download: user: %s, path: %s" % (d["user"], d["path"])
+    logging.info("abort_download: user: %s, path: %s" % (d["user"], d["path"]))
     self.send(messages.TransferAbort(0, d["user"], d["path"]))
 
   def abort_upload(self, md5hash):
-    print "abort_upload: %s" % (md5hash)
+    logging.info("abort_upload: %s" % (md5hash))
     u = self.__uploads[md5hash]
-    print "abort_upload: user: %s, path: %s" % (u["user"], u["path"])
+    logging.info("abort_upload: user: %s, path: %s" % (u["user"], u["path"]))
     self.send(messages.TransferAbort(1, u["user"], u["path"]))
 
   def remove_download(self, md5hash):
-    print "remove_download: %s" % (md5hash)
+    logging.info("remove_download: %s" % (md5hash))
     d = self.__downloads[md5hash]
-    print "remove_download: user: %s, path: %s" % (d["user"], d["path"])
+    logging.info("remove_download: user: %s, path: %s" % (d["user"], d["path"]))
     self.send(messages.TransferRemove(0, d["user"], d["path"]))
 
   def remove_upload(self, md5hash):
-    print "remove_upload: %s" % (md5hash)
+    logging.info("remove_upload: %s" % (md5hash))
     u = self.__uploads[md5hash]
-    print "remove_upload: user: %s, path: %s" % (u["user"], u["path"])
+    logging.info("remove_upload: user: %s, path: %s" % (u["user"], u["path"]))
     self.send(messages.TransferRemove(1, u["user"], u["path"]))
 
   def start_search(self, query):
-    print "start_search: %s" % (query)
+    logging.info("start_search: %s" % (query))
     self.send(messages.Search(0, query))
 
   def start_file_download(self, ticket, user, index):
-    print "start_file_download: ticket: %d, user: %s, index: %d" % (ticket, user, index)
+    logging.info("start_file_download: ticket: %d, user: %s, index: %d" % (ticket, user, index))
     ur = self.get_sresults_for_user(ticket, user)
     if ur is not None and index < len(ur):
-      print "path: %s" % (ur[index][0])
+      logging.debug("path: %s" % (ur[index][0]))
       self.send(messages.DownloadFile(user, ur[index][0]))
 
   def stop_search(self, ticket):
-    print "stop_search: %s" % (ticket)
+    logging.info("stop_search: %s" % (ticket))
     self.send(messages.SearchReply(ticket=ticket))
 
   def print_transfer(self, direction, transfer):
-    print "%s user: %s, path: %s, fsize: %d, pos: %s, rate: %d, state: %s, err: %s" % (direction, transfer.user, transfer.path, transfer.filesize, transfer.filepos, transfer.rate, self.states[int(transfer.state)], transfer.error)
+    logging.debug("%s user: %s, path: %s, fsize: %d, pos: %s, rate: %d, state: %s, err: %s" % (direction, transfer.user, transfer.path, transfer.filesize, transfer.filepos, transfer.rate, self.states[int(transfer.state)], transfer.error))
 
   def get_sresults_for_ticket(self, ticket):
     if ticket not in self.__search_results:
@@ -131,7 +132,7 @@ class MuseekDriver(driver.Driver):
     self.__users.set(user, MuseekDriver.build_user_info(user, free, speed, queue, info, image, uploads))
 
   def cb_transfer_state(self, downloads, uploads):
-    print "cb_transfer_state"
+    logging.debug("cb_transfer_state")
     for t in uploads:
       self.print_transfer("uploading...", t)
       self.__uploads[md5.new(str(t.user + t.path)).hexdigest()] = self.__transfer_to_dict(t)
@@ -140,7 +141,7 @@ class MuseekDriver(driver.Driver):
       self.__downloads[md5.new(str(t.user + t.path)).hexdigest()] = self.__transfer_to_dict(t)
 
   def cb_transfer_update(self, transfer):
-    print "cb_transfer_update"
+    logging.debug("cb_transfer_update")
     if transfer.is_upload:
       self.print_transfer("uploading...", transfer)
       self.__uploads[md5.new(str(transfer.user + transfer.path)).hexdigest()] = self.__transfer_to_dict(transfer)
@@ -149,30 +150,30 @@ class MuseekDriver(driver.Driver):
       self.__downloads[md5.new(str(transfer.user + transfer.path)).hexdigest()] = self.__transfer_to_dict(transfer)
 
   def cb_transfer_abort(self, transfer):
-    print "cb_transfer_abort: %s" % (str(transfer))
+    logging.debug("cb_transfer_abort: %s" % (str(transfer)))
 
   def cb_transfer_remove(self, transfer):
-    print "cb_transfer_remove: %s %d"  % (str(transfer), transfer[0])
+    logging.debug("cb_transfer_remove: %s %d"  % (str(transfer), transfer[0]))
     if transfer[0] > 0:
       del self.__uploads[md5.new(str(transfer[1] + transfer[2])).hexdigest()]
     else:
       del self.__downloads[md5.new(str(transfer[1] + transfer[2])).hexdigest()]
 
   def cb_server_state(self, state, username):
-    print "cb_server_state: " + str(state) + " " + username
+    logging.debug("cb_server_state: " + str(state) + " " + username)
 
   def cb_disconnected(self):
-    print "cb_disconnected"
+    logging.debug("cb_disconnected")
 
   def cb_login_error(self, reason):
-    print "cb_login_error"
+    logging.debug("cb_login_error")
 
   def cb_login_ok(self):
-    print "cb_login_ok"
+    logging.debug("cb_login_ok")
     self.is_connected = True
 
   def cb_search_results(self, ticket, user, free, speed, queue, results):
-    print "cb_search_results: ticket: %s, user: %s, free: %s, speed: %s, queue: %s, results: %s" % (ticket, user, free, speed, queue, results)
+    logging.debug("cb_search_results: ticket: %s, user: %s, free: %s, speed: %s, queue: %s, results: %s" % (ticket, user, free, speed, queue, results))
     if len(results) == 0:
       return
     us = self.get_sresults_for_user(ticket, user)
@@ -182,7 +183,7 @@ class MuseekDriver(driver.Driver):
     self.__set_user(user, free, speed, queue)
 
   def cb_user_info(self, user, info, picture, uploads, queue, free):
-    print "cb_user_info: user: %s, info: %s, image: %s, uploads: %d, queue: %d, free: %d" % (user, info, picture, uploads, queue, free)
+    logging.debug("cb_user_info: user: %s, info: %s, image: %s, uploads: %d, queue: %d, free: %d" % (user, info, picture, uploads, queue, free))
     self.__set_user(user, free, 0, queue, info, picture, uploads)
 
 class Worker(threading.Thread):
@@ -196,7 +197,6 @@ class Worker(threading.Thread):
     while not self.event_stop.isSet():
       time.sleep(WORKER_THREAD_DELAY)
       self.mudriver.process()
-    print "stop event set"
 
   def join(self, timeout=None):
     self.event_stop.set()
