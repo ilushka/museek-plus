@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 BIN_NAME=$(basename $0)
 
 function show_usage() {
@@ -44,7 +42,10 @@ function start_app {
 
 function do_pylint {
     . pyenv/bin/activate
+    printf "mudriver.py:\n\n"
     pylint mudriver.py
+    printf "kvring.py:\n\n"
+    pylint kvring.py
 }
 
 case $1 in

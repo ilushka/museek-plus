@@ -1,46 +1,61 @@
-class KeyValueRing:
-  def __init__(self, max_count):
-    self.d = {}
-    self.q = []
-    self.max_count = max_count
+""" A dictionary that stores only last N values. """
 
-  def set(self, key, value):
-    print "KeyValueRing.set: key: %s; value: %s" % (key, value)
+import logging
 
-    # do we need to remove existing key from queue?
-    oldval = self.d.get(key, None)
-    if oldval is not None:
-      del self.q[oldval["qindex"]]
+logging.basicConfig(level=logging.INFO)
 
-    if len(self.q) >= self.max_count:
-      del self.d[self.q.pop(0)]
+class KeyValueRing(object):
+    """ A dictionary that stores only last N values. """
 
-    # at this point only <= max_count of elements should be stored in ring
-    # and we know that new key will be at len(self.q) position
+    def __init__(self, max_count):
+        self.dict = {}
+        self.queue = []
+        self.max_count = max_count
 
-    # insert key/value
-    self.d[key] = {"qindex": len(self.q), "value": value}
-    self.q.append(key)
+    def set(self, key, value):
+        """ Set new value for specified key. If key already exists it is
+            overwritten and value is marked as the newest value """
 
-    # MONKEY:
-    if len(self.d) != len(self.q):
-      print "MONKEY: should not happen"
+        logging.debug("set: %s => %s", key, value)
 
-  def get(self, key):
-    value = self.d.get(key, None)
-    if value is not None:
-      value = value["value"]
-    return value
+        # do we need to remove existing key from queue?
+        oldval = self.dict.get(key, None)
+        if oldval is not None:
+            del self.queue[oldval["qindex"]]
 
-  def get_all(self):
-    return self.d
+        if len(self.queue) >= self.max_count:
+            del self.dict[self.queue.pop(0)]
 
-  def __len__(self):
-    return len(self.q)
+        # at this point only <= max_count of elements should be stored in ring
+        # and we know that new key will be at len(self.queue) position
 
-  def __str__(self):
-    s = ""
-    for k in self.q:
-      s += (k + ": " + self.d[k] + ", ")
-    return s
+        # insert key/value
+        self.dict[key] = {"qindex": len(self.queue), "value": value}
+        self.queue.append(key)
 
+        if len(self.dict) != len(self.queue):
+            logging.critical("Size of dictionary should always equal size of queue.")
+
+    def get(self, key):
+        """ Get value for specified key. """
+
+        value = self.dict.get(key, None)
+        logging.debug("get: %s => %s", key, value)
+        if value is not None:
+            value = value["value"]
+        return value
+
+    def get_all(self):
+        """ Retrieve complete dictionary. """
+
+        logging.debug("get_all")
+        return self.dict
+
+    def __len__(self):
+        return len(self.queue)
+
+    def __str__(self):
+        string = ""
+        for key in self.queue:
+            string += (key + ": " + self.dict[key] + ", ")
+        return string
