@@ -12,6 +12,9 @@ function show_usage() {
         "start")
             printf "Start backend application.\n"
             ;;
+        "pylint")
+            printf "Run pylint on all Python code.\n"
+            ;;
         *)
             printf "Usage: ${BIN_NAME} <"
             cat ${BIN_NAME} | awk 'BEGIN { FS = "\""; ORS = "|"; } /\"[a-z\-]+\"\) # first-level-arg/ { print $2; }'
@@ -39,12 +42,20 @@ function start_app {
     python museekwebui.py
 }
 
+function do_pylint {
+    . pyenv/bin/activate
+    pylint mudriver.py
+}
+
 case $1 in
     "install-env") # first-level-arg;
         install_env "${@:2}"
         ;;
     "start") # first-level-arg;
         start_app "${@:2}"
+        ;;
+    "pylint") # first-level-arg;
+        do_pylint "${@:2}"
         ;;
     "help") # first-level-arg;
         show_usage "${@:2}"
