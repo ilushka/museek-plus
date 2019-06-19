@@ -46,6 +46,8 @@ function do_pylint {
     pylint mudriver.py
     printf "kvring.py:\n\n"
     pylint kvring.py
+    printf "museekwebui.py:\n\n"
+    pylint museekwebui.py
 }
 
 case $1 in
