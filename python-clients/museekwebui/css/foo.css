@@ -1,0 +1,20 @@
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+#user_hover_box {
+    position: absolute;
+    z-index: 10;
+    display: none;
+    background-color: white;
+    border: 1px solid black;
+}
+
+.hover_link {
+    display: inline-block;
+    background-color: red;
+}

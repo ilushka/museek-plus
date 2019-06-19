@@ -1,9 +1,17 @@
 """ Web UI for MuSeek """
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_from_directory
 from mudriver import MUDRIVER, MUWORKER
 
 APP = Flask(__name__)
+
+@APP.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('js', path)
+
+@APP.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory('css', path)
 
 @APP.route("/")
 def root():
