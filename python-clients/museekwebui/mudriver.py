@@ -81,7 +81,7 @@ class MuseekDriver(driver.Driver):
                 "rate": transfer.rate, "state": transfer.state}
 
     #
-    # Methords for executing driver by a thread
+    # Methods for executing driver by a thread
     ##########
 
     def connect(self):
